@@ -2,15 +2,19 @@
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Gold dust in the gate (any page with a #dust canvas). Each speck slowly
-  // fades in, glows, fades out over 7-14s, then reappears somewhere new.
+  // fades in, glows, fades out over 5-11s, then reappears somewhere new.
   const c = document.getElementById('dust');
   if (c) {
     const x = c.getContext('2d');
     let w, h, dpr, motes = [];
+    // About one in four is a large soft orb; the rest are fine specks
     const make = (now, age = 0) => {
-      const dur = 7000 + Math.random() * 7000;
-      return { x: Math.random() * w, y: Math.random() * h, r: .6 + Math.random() * 1.8,
-        rise: 4 + Math.random() * 8, sway: Math.random() * 6.28, dur, born: now - age * dur };
+      const orb = Math.random() < .25;
+      const dur = (orb ? 6000 : 5000) + Math.random() * 5000;
+      return { x: Math.random() * w, y: Math.random() * h,
+        r: orb ? 4 + Math.random() * 6 : .8 + Math.random() * 1.6,
+        peak: orb ? .35 + Math.random() * .25 : .9,
+        rise: orb ? 2 + Math.random() * 4 : 4 + Math.random() * 8, sway: Math.random() * 6.28, dur, born: now - age * dur };
     };
     const size = () => {
       dpr = Math.min(devicePixelRatio || 1, 2);
@@ -32,7 +36,7 @@
         const glow = still ? .6 : Math.sin(Math.PI * p) ** 2;
         if (glow < .01) continue;
         const g = x.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.r * 4);
-        g.addColorStop(0, `rgba(250,226,170,${.9 * glow})`); g.addColorStop(1, 'rgba(250,226,170,0)');
+        g.addColorStop(0, `rgba(250,226,170,${m.peak * glow})`); g.addColorStop(1, 'rgba(250,226,170,0)');
         x.fillStyle = g; x.beginPath(); x.arc(m.x, m.y, m.r * 4, 0, 6.29); x.fill();
       }
       if (!still) requestAnimationFrame(frame);
