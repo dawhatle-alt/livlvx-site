@@ -1,28 +1,38 @@
 (() => {
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Gold dust rising through the gate (any page with a #dust canvas)
+  // Gold dust in the gate (any page with a #dust canvas). Each speck slowly
+  // fades in, glows, fades out over 7-14s, then reappears somewhere new.
   const c = document.getElementById('dust');
   if (c) {
     const x = c.getContext('2d');
     let w, h, dpr, motes = [];
-    const make = (y) => ({ x: Math.random() * w, y: y ?? Math.random() * h, r: .6 + Math.random() * 1.8,
-      v: .15 + Math.random() * .45, sway: Math.random() * 6.28, sp: .004 + Math.random() * .01, tw: Math.random() * 6.28 });
+    const make = (now, age = 0) => {
+      const dur = 7000 + Math.random() * 7000;
+      return { x: Math.random() * w, y: Math.random() * h, r: .6 + Math.random() * 1.8,
+        rise: 4 + Math.random() * 8, sway: Math.random() * 6.28, dur, born: now - age * dur };
+    };
     const size = () => {
       dpr = Math.min(devicePixelRatio || 1, 2);
       w = c.clientWidth; h = c.clientHeight;
       c.width = w * dpr; c.height = h * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0);
       const n = Math.round(Math.min(110, w * h / 9000));
-      motes = Array.from({ length: n }, () => make());
+      const now = performance.now();
+      // Stagger ages so specks are at different points in their fade, never in sync
+      motes = Array.from({ length: n }, () => make(now, Math.random()));
     };
-    const frame = () => {
+    let last = performance.now();
+    const frame = (now = performance.now()) => {
+      const dt = Math.min(now - last, 100) / 1000; last = now;
       x.clearRect(0, 0, w, h);
       for (const m of motes) {
-        if (!still) { m.y -= m.v; m.sway += m.sp; m.tw += .03; m.x += Math.sin(m.sway) * .25; }
-        if (m.y < -10) Object.assign(m, make(h + 10));
-        const fade = Math.min(1, m.y / (h * .35)) * (.55 + .45 * Math.sin(m.tw));
+        let p = (now - m.born) / m.dur;
+        if (p >= 1) { Object.assign(m, make(now)); p = 0; }
+        if (!still) { m.y -= m.rise * dt; m.sway += dt * .6; m.x += Math.sin(m.sway) * 4 * dt; }
+        const glow = still ? .6 : Math.sin(Math.PI * p) ** 2;
+        if (glow < .01) continue;
         const g = x.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.r * 4);
-        g.addColorStop(0, `rgba(250,226,170,${.9 * fade})`); g.addColorStop(1, 'rgba(250,226,170,0)');
+        g.addColorStop(0, `rgba(250,226,170,${.9 * glow})`); g.addColorStop(1, 'rgba(250,226,170,0)');
         x.fillStyle = g; x.beginPath(); x.arc(m.x, m.y, m.r * 4, 0, 6.29); x.fill();
       }
       if (!still) requestAnimationFrame(frame);
