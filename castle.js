@@ -3,6 +3,7 @@
 
   // Gold dust in the gate (any page with a #dust canvas). Each speck slowly
   // fades in, glows, fades out over 5-11s, then reappears somewhere new.
+  // With reduced motion the specks stay in place but still fade gently.
   const c = document.getElementById('dust');
   if (c) {
     const x = c.getContext('2d');
@@ -33,16 +34,16 @@
         let p = (now - m.born) / m.dur;
         if (p >= 1) { Object.assign(m, make(now)); p = 0; }
         if (!still) { m.y -= m.rise * dt; m.sway += dt * .6; m.x += Math.sin(m.sway) * 4 * dt; }
-        const glow = still ? .6 : Math.sin(Math.PI * p) ** 2;
+        const glow = Math.sin(Math.PI * p) ** 2;
         if (glow < .01) continue;
         const g = x.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.r * 4);
         g.addColorStop(0, `rgba(250,226,170,${m.peak * glow})`); g.addColorStop(1, 'rgba(250,226,170,0)');
         x.fillStyle = g; x.beginPath(); x.arc(m.x, m.y, m.r * 4, 0, 6.29); x.fill();
       }
-      if (!still) requestAnimationFrame(frame);
+      requestAnimationFrame(frame);
     };
     size(); frame();
-    let t; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => { size(); if (still) frame(); }, 150); });
+    let t; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(size, 150); });
   }
 
   // Eleven arched windows for You-Universe; they light one by one

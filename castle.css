@@ -168,7 +168,11 @@ footer small{font-size:15px;color:#8f7f70;font-style:italic}
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{animation:none!important;transition:none!important}
+  /* Keep the gentle, motionless glows: no movement, only light */
+  .arch .halo{animation:halo 5s ease-in-out infinite!important}
+  .arch .sun{animation:candle-still 5s ease-in-out infinite!important}
 }
+@keyframes candle-still{0%,100%{box-shadow:0 0 60px 12px rgba(240,200,130,.36)}50%{box-shadow:0 0 100px 26px rgba(240,200,130,.52)}}
 
 /* ---------- shared site chrome ---------- */
 .nav ul a[aria-current="page"]{color:var(--gold-hi)}
